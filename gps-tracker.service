@@ -1,0 +1,14 @@
+[Unit]
+Description=GPS Tracker
+After=network.target gpsd.service
+Wants=gpsd.service
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/gps-tracker
+ExecStart=/usr/bin/python3 /home/pi/gps-tracker/app.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

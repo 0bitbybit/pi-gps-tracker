@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ label }} — live</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  html, body, #map { height: 100%; margin: 0; }
+
+  /* Cute labeled car marker */
+  .car-pin { text-align: center; white-space: nowrap; }
+  .car-pin .emoji {
+    font-size: 30px;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+  }
+  .car-pin .tag {
+    display: inline-block;
+    background: #ff5c8a;
+    color: #fff;
+    font: bold 12px/1 system-ui, sans-serif;
+    padding: 4px 9px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin-top: 2px;
+  }
+
+  #status {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.75); color: #fff;
+    font: 13px/1.4 monospace;
+    padding: 8px 14px; border-radius: 10px; z-index: 999;
+  }
+  #status .dot { color: #f1c40f; }
+  #status.live .dot { color: #2ecc71; }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="status"><span class="dot">●</span> <span id="msg">waiting for GPS fix…</span></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map = L.map('map').setView([0, 0], 3);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap'
+}).addTo(map);
+
+const carIcon = L.divIcon({
+  className: '',
+  html: `<div class="car-pin"><div class="emoji">🚗</div><div class="tag">{{ label }}</div></div>`,
+  iconSize: [90, 52],
+  iconAnchor: [45, 26]
+});
+
+let marker = null;
+let centred = false;
+const statusEl = document.getElementById('status');
+const msgEl = document.getElementById('msg');
+
+setInterval(async () => {
+  try {
+    const d = await fetch('/position').then(r => r.json());
+    if (d.fix && d.lat && d.lon) {
+      const ll = [d.lat, d.lon];
+      if (!marker) marker = L.marker(ll, { icon: carIcon }).addTo(map);
+      marker.setLatLng(ll);
+      if (!centred) { map.setView(ll, 16); centred = true; }
+      statusEl.classList.add('live');
+      msgEl.textContent = `live — ${d.speed_kmh ?? 0} km/h · ${d.satellites ?? '—'} sats`;
+    } else {
+      statusEl.classList.remove('live');
+      msgEl.textContent = 'waiting for GPS fix…';
+    }
+  } catch (e) {
+    statusEl.classList.remove('live');
+    msgEl.textContent = 'Pi offline';
+  }
+}, 1000);
+</script>
+</body>
+</html>
