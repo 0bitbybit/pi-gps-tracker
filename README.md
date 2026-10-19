@@ -1,3 +1,8 @@
+<p align="center">
+<img width="1920" height="1080" alt="gps_tracker_install" src="https://github.com/user-attachments/assets/32cedefa-f28e-4ffb-a6dc-898752dcc425" />
+</p>
+
+
 # 🚗 Pi GPS Car Tracker
 
 A self-contained, self-healing car GPS tracker built on a Raspberry Pi 4B and a
